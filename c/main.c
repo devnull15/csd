@@ -1,6 +1,44 @@
 #include <stdio.h>
 #include <sys/stat.h>
+#include <stdlib.h>
 
+
+// 3.1.8 - function declarations
+int by_value(int);
+int* by_ref(int*);
+void user_in();
+
+// function definitions
+int by_value(int val) {
+  printf("I got this by value! Its address is now %p and the value is %i\n", &val, val);
+  return val;
+}
+
+int* by_ref(int* val) {
+  printf("I got this by reference! Its address is still %p and the value is %i\n", val, *val);
+  return val;
+}
+
+void user_in(){
+  char buf[10];
+  printf("Enter your name, only the first ten characters are taken.\n");
+  scanf("%10s",buf);
+  char flagged = 0;
+  for(int i = 0; i < sizeof(buf);i++) {
+    if(isdigit(buf[i])) {
+      flagged = 1;
+    }
+  }
+  if(flagged) {
+    printf("That's not a real name! Try again.\n");
+    user_in();
+  }
+  else{ 
+    printf("Thanks!\n");
+  }
+  return;
+}
+///3.1.8
 
 // 3.1.4
 void print_array() {
@@ -41,7 +79,7 @@ void maths() {
   printf("0. a = %i; b = %i\n",a,b);
   printf("1. Postfix Inc/Dec: a++ = %i; a--  = %i; a = %i\n", a++,a--,a);
   printf("2. Prefix Inc/Dec: ++a = %i; --a  = %i; a = %i\n", ++a,--a,a);
-  printf("3. */%: a * a / a %% a = %i\n",a*a/a%a);
+  printf("3. */mod : a * a / a %% a = %i\n",a*a/a%a);
   printf("4. +-: a + a - a = %i\n",a+b-a);
  
   //  int result = a++ + --a - a * a / a % a;
@@ -59,7 +97,7 @@ void file_shenanigans() {
   FILE *f = fopen(fn,"w+");
   printf("Wrting to file...\n");
   fputs("Hello World!\n",f);
-  printf("I'm currently at %i in the file.\nTime to rewind!\n",ftell(f));
+  printf("I'm currently at %ld in the file.\nTime to rewind!\n",ftell(f));
   rewind(f);
   char buf[buf_size];
   fgets(buf,buf_size,f);
@@ -67,9 +105,9 @@ void file_shenanigans() {
   struct stat st;
   fstat(fileno(f),&st);
   printf("Here's what fstat says:\n");
-  printf("File Size: \t\t%d bytes\n",st.st_size);
-  printf("Number of Links: \t%d\n",st.st_nlink);
-  printf("File inode: \t\t%d\n",st.st_ino);
+  printf("File Size: \t\t%ld bytes\n",st.st_size);
+  printf("Number of Links: \t%ld\n",st.st_nlink);
+  printf("File inode: \t\t%ld\n",st.st_ino);
   printf("File Permissions: \t");
   printf( (S_ISDIR(st.st_mode)) ? "d" : "-");
   printf( (st.st_mode & S_IRUSR) ? "r" : "-");
@@ -124,12 +162,12 @@ int main(int argc, char **argv, char **envp) {
   char c;
   double d;
   long l;
-  printf("short: %d\n", sizeof(s));
-  printf("int: %d\n", sizeof(i));
-  printf("float: %d\n", sizeof(f));
-  printf("char: %d\n", sizeof(c));
-  printf("double: %d\n", sizeof(d));
-  printf("long: %d\n", sizeof(l));
+  printf("short: %ld\n", sizeof(s));
+  printf("int: %ld\n", sizeof(i));
+  printf("float: %ld\n", sizeof(f));
+  printf("char: %ld\n", sizeof(c));
+  printf("double: %ld\n", sizeof(d));
+  printf("long: %ld\n", sizeof(l));
   printf("* *\n\n");
 
   printf("* 3.1.4 *\n");
@@ -155,6 +193,14 @@ int main(int argc, char **argv, char **envp) {
   file_shenanigans();
   printf("* *\n\n");
 
+  printf("* 3.1.8 *\n");
+  int val = 15;
+  printf("This is in main, the variable 'val' is at %p and has the value %i\n",&val,val);
+  by_value(val);
+  by_ref(&val);
+  void (*user_in_ptr)() = &user_in;
+  (*user_in_ptr)();
+  printf("* *\n\n");
   
   return 0;
 }
