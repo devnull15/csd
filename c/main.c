@@ -89,12 +89,15 @@ void file_shenanigans() {
   rewind(f);
   fgets(buf,buf_size,f);
   printf("File says: %s",buf);
+
+  //blah
   
   fseek(f,0,SEEK_END);
   fputs("Hello again!\n",f);
   rewind(f);
-  fgets(buf,buf_size,f);
-  printf("File says: %s",buf);
+  while (fgets(buf, buf_size, f) != NULL) {
+    printf("File says: %s",buf);
+  }
 
   printf("Closing and deleting :(\n");
   fclose(f);
