@@ -2,11 +2,17 @@
 #include <sys/stat.h>
 #include <stdlib.h>
 
+//3.1.11
+void loops_n_ifs_stuff(){
+  return;
+}
+///3.1.11
 
-// 3.1.8 - function declarations
+// 3.1.8/9/10 - function declarations
 int by_value(int);
 int* by_ref(int*);
 void user_in();
+void ptr_fun(int*,int);
 
 // function definitions
 int by_value(int val) {
@@ -38,7 +44,21 @@ void user_in(){
   }
   return;
 }
-///3.1.8
+
+void ptr_fun(int* ptr, int val){
+  printf("name (mem_addr):value\n");
+  printf("ptr (%p):%i\n",ptr,*ptr);
+  printf("val (%p):%i\n",&val,val);
+  ptr = &val;
+  printf("ptr is now: (%p):%i\n",ptr,*ptr);
+  int arr[4] = {1,2,3,4};
+  printf("arr: (%p):%i\n",arr,*arr);
+  printf("arr[1]: (%p):%i\n",arr+1,*(arr+1));
+  printf("arr[1]: (%p):%i\n",(void*)arr+sizeof(int),*(int*)((void*)arr+sizeof(int)));
+
+  return;
+}
+///3.1.8/9/10
 
 // 3.1.4
 void print_array() {
@@ -193,13 +213,18 @@ int main(int argc, char **argv, char **envp) {
   file_shenanigans();
   printf("* *\n\n");
 
-  printf("* 3.1.8 *\n");
+  printf("* 3.1.8/9/10 *\n");
   int val = 15;
   printf("This is in main, the variable 'val' is at %p and has the value %i\n",&val,val);
   by_value(val);
   by_ref(&val);
   void (*user_in_ptr)() = &user_in;
   (*user_in_ptr)();
+  ptr_fun(&val,val);
+  printf("* *\n\n");
+
+  printf("* 3.1.11 *\n");
+  loops_n_ifs_stuff();
   printf("* *\n\n");
   
   return 0;
