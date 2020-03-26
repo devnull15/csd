@@ -1,9 +1,53 @@
 #include <stdio.h>
 #include <sys/stat.h>
-#include <stdlib.h>
+// include <stdlib.h>
+#include <string.h>
 
 //3.1.11
 void loops_n_ifs_stuff(){
+  char *strs[10];
+  int strs_size = sizeof(strs)/sizeof(strs[0]);
+  for(int i=0;i<strs_size-1;i++){
+    strs[i] = "hi";
+  }
+  strs[strs_size-1] = "bye";
+  int count = 0;
+  printf("while\n");
+  while(strcmp(strs[++count],"bye")){
+    printf("string %i is %s\n",count, strs[count]);
+  }
+  count = 0;
+  printf("dowhile\n");
+  do{
+    printf("string %i is %s\n",count, strs[count]);
+  }while(strcmp(strs[++count],"bye"));
+  
+  RPS:
+  printf ("Let's play rock, paper, scissors.\n");
+  int rps = rand()%3;
+  char choice;
+  if(rps==0){ choice = 'r'; }
+  else if (rps==1){ choice = 'p'; }
+  else if (rps==2){ choice = 's'; }
+  else { choice = 'g'; }
+
+  switch((int)choice) {
+    case 'r':
+      printf("I pick paper, you have rock. I win! Try again.\n");
+      goto RPS;
+    case 'p':
+      printf("I pick paper you have paper. Tie. Try again.\n");
+      goto RPS;
+    case 's':
+      printf("I pick paper you have scissors. You win!\n");
+      goto END;
+    case 'g':
+      printf("gun - How did you get this?\n");
+      goto END;
+  }
+  END:
+  printf("This is the end!\n");
+
   return;
 }
 ///3.1.11
