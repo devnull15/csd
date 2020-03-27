@@ -112,7 +112,7 @@ void *server_sender(void *sock){
   printf("Server %i online.\n",s);
   sr_wrapper(NULL, SERVER, RECV, s);
   char ip[IP4LEN];
-  get_info();
+  //get_info();
   pthread_exit(EXIT_SUCCESS);
 }
 
