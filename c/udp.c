@@ -12,16 +12,31 @@
 #define CLIENT 1
 #define SEND 0
 #define RECV 1
-#define IPV4LEN 16
 
-void* client_sender(void *sock){
-  int s = *((int*)(sock));
-  char msg[256];
+void* client_sender(){
   printf("Client %i online.\n",s);
+
+  char msg[256];
+  struct sockaddr_in serv_addr;
+  socklen_t addr_len = sizeof(serv_addr);
+  int s;
+  
+  if ((s = socket(AF_INET, SOCK_DGRAM, 0)) < 0) { 
+      perror("Client: Socket creation error \n"); 
+      pthread_exit(EXIT_FAILURE);
+    }
+
+  //set dst socket info
+  serv_addr.sin_family = AF_INET;
+  serv_addr.sin_port = htons(PORT); 
+  if(inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr)<=0) { 
+    printf("Client: Invalid address/ Address not supported\n"); 
+    pthread_exit(EXIT_FAILURE);
+  }
 
   sprintf(msg, "Hello from client!");
   printf("Client %i is sending: '%s'\n",s,msg);
-  if(sendto(s, msg, strlen(msg) , 0,NULL,0)<0) {
+  if(sendto(s, msg, strlen(msg) , 0,(struct sockaddr*)&serv_addr,addr_len)<0) {
     printf("Client %i error in sendto.\n",s);
     perror("*");
     return EXIT_FAILURE;
@@ -34,26 +49,14 @@ void* client_sender(void *sock){
 void* client_maker(){ 
   printf("client_maker started.\n");
 
-  int sock;
-  struct sockaddr_in serv_addr;
   //make a client n times
   pthread_t c[NUM_CLIENTS];
-   
+  
   for(int i = 0; i < NUM_CLIENTS; i++){
-    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) { 
-      perror("Client: Socket creation error \n"); 
-      pthread_exit(EXIT_FAILURE);
-    }
-    //set dst socket info
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(PORT); 
-    if(inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr)<=0) { 
-      printf("Client: Invalid address/ Address not supported\n"); 
-      pthread_exit(EXIT_FAILURE);
-    }
-
+    //can't make the socket here, it causes a race condition, not sure why
+    //makes the client sender use the same socket
     printf("Making a client to send some data.\n");
-    pthread_create(&c[i],NULL,client_sender,(void*)&sock);
+    pthread_create(&c[i],NULL,client_sender,NULL);
   }
   for(int i = 0; i < NUM_CLIENTS; i++){
     pthread_join(c[i]);
@@ -100,7 +103,8 @@ void *server_listener() {
       return EXIT_FAILURE;
     }
     inet_ntop(AF_INET, &from.sin_addr,from_addr, INET_ADDRSTRLEN);
-    printf("Received message from %s: '%s'\n",from_addr,buf);
+    short port = ntohs(from.sin_port);
+    printf("Received message from %s:%i: '%s'\n",from_addr,port,buf);
   }
   
   pthread_exit(EXIT_SUCCESS);
