@@ -1,4 +1,5 @@
 language = "c"
 #run = "gcc -o main c/main.c; ./main"
-run = "gcc -pthread -o throckets c/throckets.c; ./throckets"
+#run = "gcc -pthread -o c/tcp c/tcp.c; ./c/tcp"
 #run = "gcc -o server_stolen c/server_stolen.c; ./server_stolen"
+run = "gcc -pthread -o c/udp c/udp.c; ./c/udp"

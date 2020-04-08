@@ -1,5 +1,5 @@
 // 3.1.12
-//#include <unistd.h> 
+#include <unistd.h> 
 #include <stdio.h> 
 #include <sys/socket.h> 
 #include <stdlib.h> 
@@ -47,8 +47,9 @@ int get_info(char* lookup) {
   int err;
   struct addrinfo *temp;
 
-  
+  printf("memset\n");
   memset(&hints, 0, sizeof(struct addrinfo));
+  printf("memset\n");
   hints.ai_family = AF_INET;
   if(err = getaddrinfo(lookup, NULL, &hints, &infoptr)) {
     fprintf(stderr,"gai_strerror: %s\n",gai_strerror(err));
@@ -111,6 +112,7 @@ void* client_sender(void *sock){
   sprintf(msg, "Looking up hostname: %s", LOOKUP);
   sr_wrapper(msg,CLIENT,SEND,s);
 
+  printf("Client %i done!\n",s);
   pthread_exit(EXIT_SUCCESS);
 }
 
@@ -144,6 +146,7 @@ void* client_maker(){
     pthread_create(&c[i],NULL,client_sender,(void*)&sock);
   }
   for(int i = 0; i < NUM_CLIENTS; i++){
+    printf("waiting for clients to exit...\n"); //without this replit crashes??
     pthread_join(c[i]);
   }
   printf("All clients have successfully exited!\n");
@@ -160,6 +163,7 @@ void *server_sender(void *sock){
   sr_wrapper(NULL, SERVER, RECV, s); //get_info
   get_info(LOOKUP);
   
+  printf("Server %i done!\n",s);
   pthread_exit(EXIT_SUCCESS);
 }
 
@@ -180,6 +184,9 @@ void *server_listener() {
   //setting sock opts
   int opt = 1;
   int optlen;
+  //these options aren't really needed but just for POC
+  // SO_REUSEPORT would really only be useful if I had multiple
+  // server threads binded to the same port
   if (setsockopt(sd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) { 
     perror("Server: Error in setsockopt"); 
     exit(EXIT_FAILURE); 
