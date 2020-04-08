@@ -27,7 +27,6 @@ int change_hostname(char *newhn) {
   printf("gethostname: %s\n",hn);
 
   //sethostname
-  newhn = "Midgard";
   printf("changing host name to %s...\n",newhn);
   if(sethostname(newhn,strlen(newhn))<0) { perror("Error in sethostname."); }
   if(gethostname(hn,buflen)<0) { perror("Error in gethostname."); }
