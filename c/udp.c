@@ -1,4 +1,6 @@
 // 3.1.12
+#define _GNU_SOURCE
+#include <pthread.h>
 #include <unistd.h> 
 #include <stdio.h> 
 #include <sys/socket.h> 
@@ -6,6 +8,7 @@
 #include <netinet/in.h>
 #include <string.h>
 #include <netdb.h>
+#include <arpa/inet.h>
 #define PORT 8080
 #define NUM_CLIENTS 2
 #define SERVER 0
@@ -23,7 +26,7 @@ void* client_sender(){
   
   if ((s = socket(AF_INET, SOCK_DGRAM, 0)) < 0) { 
       perror("Client: Socket creation error \n"); 
-      pthread_exit(EXIT_FAILURE);
+      pthread_exit((void*)EXIT_FAILURE);
     }
 
   printf("Client %i online.\n",s);
@@ -33,7 +36,7 @@ void* client_sender(){
   serv_addr.sin_port = htons(PORT); 
   if(inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr)<=0) { 
     printf("Client: Invalid address/ Address not supported\n"); 
-    pthread_exit(EXIT_FAILURE);
+    pthread_exit((void*)EXIT_FAILURE);
   }
 
   sprintf(msg, "Hello from client!");
@@ -41,12 +44,12 @@ void* client_sender(){
   if(sendto(s, msg, strlen(msg) , 0,(struct sockaddr*)&serv_addr,addr_len)<0) {
     printf("Client %i error in sendto.\n",s);
     perror("*");
-    pthread_exit(EXIT_FAILURE);
+    pthread_exit((void*)EXIT_FAILURE);
   }
 
   printf("Client %i done!\n",s);
-  //pthread_exit(EXIT_SUCCESS);
-  pthread_exit(NULL);
+  //pthread_exit((void*)EXIT_SUCCESS);
+  pthread_exit((void*)NULL);
 }
 
 void* client_maker(){ 
@@ -54,6 +57,7 @@ void* client_maker(){
 
   //make a client n times
   pthread_t c[NUM_CLIENTS];
+  int ret[NUM_CLIENTS];
   
   for(int i = 0; i < NUM_CLIENTS; i++){
     //can't make the socket here, it causes a race condition, not sure why
@@ -62,12 +66,16 @@ void* client_maker(){
     pthread_create(&c[i],NULL,client_sender,NULL);
   }
   for(int i = 0; i < NUM_CLIENTS; i++){
-    printf("pthread_join!\n"); // adding this print statement stops it from segfaulting WHY
-    pthread_join(c[i]);
+    pthread_join(c[i],(void**)&ret[i]);
   }
-
+  for(int i = 0; i < NUM_CLIENTS; i++){
+    if(ret[i] != EXIT_SUCCESS) {
+      printf("One or more clients have failed :(\n");
+      pthread_exit((void*)EXIT_FAILURE);
+    }
+  }
   printf("All clients have successfully exited!\n");
-  pthread_exit(EXIT_SUCCESS);
+  pthread_exit((void*)EXIT_SUCCESS);
 }
 
 
@@ -85,7 +93,7 @@ void *server_listener() {
   // Creating socket file descriptor
   if ((sd = socket(AF_INET, SOCK_DGRAM, 0)) == 0) { 
     perror("Server: Error in socket"); 
-    pthread_exit(EXIT_FAILURE);
+    pthread_exit((void*)EXIT_FAILURE);
   }
   
   addr.sin_family = AF_INET; 
@@ -95,7 +103,7 @@ void *server_listener() {
   //binding socket
   if (bind(sd, (struct sockaddr *) &addr, addrlen)<0) { 
     perror("Server: Error in bind"); 
-    pthread_exit(EXIT_FAILURE); 
+    pthread_exit((void*)EXIT_FAILURE); 
   }
 
   //wait for incoming connection
@@ -104,14 +112,14 @@ void *server_listener() {
     memset((void*)buf, 0x00, buf_size);
     if(recvfrom(sd, (void*)buf, buf_size,0,(struct sockaddr*)&from,&addrlen)<0) {
       perror("Error in recvfrom.");
-      pthread_exit(EXIT_FAILURE);
+      pthread_exit((void*)EXIT_FAILURE);
     }
     inet_ntop(AF_INET, &from.sin_addr,from_addr, INET_ADDRSTRLEN);
     short port = ntohs(from.sin_port);
     printf("Received message ;from %s:%i: '%s'\n",from_addr,port,buf);
   }
   
-  pthread_exit(EXIT_SUCCESS);
+  pthread_exit((void*)EXIT_SUCCESS);
 }
 
 
