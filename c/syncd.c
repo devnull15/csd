@@ -1,4 +1,3 @@
-
 #include <stdio.h>;
 #include <stdlib.h>;
 #include <pthread.h>;
@@ -9,9 +8,7 @@ void fill_list(int *);
 void empty_list(int *);
 void show_list();
 
-/* list */
-NODE * headptr;
-NODE head;
+
 
 /* mutex to protect access to list */
 pthread_mutex_t list_mutex;
@@ -22,19 +19,8 @@ sem_t done_filling_list;        /* barrier to sync fill_list threads and empty_l
 sem_t filling_list;             /* to protect threads_fill_done */
 
 
-int main()
-{
-    int i;
-
-    /* initialize list */
-    headptr = &head;
-    headptr->next = NULL;
-
-    /* initialize mutex */
-    pthread_mutex_init(&list_mutex, NULL);
-
-    /* initialize semaphores */
-    int res = sem_init(&done_filling_list,  /* pointer to semaphore */
+int main(){
+  int res = sem_init(&done_filling_list,  /* pointer to semaphore */
                        0 ,                  /* 0 if shared between threads, 1 if shared between processes */
                        0);                  /* initial value for semaphore (0 is locked) */
     if (res < 0)
