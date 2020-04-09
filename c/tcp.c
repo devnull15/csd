@@ -1,7 +1,10 @@
 // 3.1.12
+#define _GNU_SOURCE
+#include <pthread.h>
 #include <unistd.h> 
 #include <stdio.h> 
-#include <sys/socket.h> 
+#include <sys/socket.h>
+#include <arpa/inet.h>
 #include <stdlib.h> 
 #include <netinet/in.h>
 #include <string.h>
@@ -47,17 +50,15 @@ int get_info(char* lookup) {
   int err;
   struct addrinfo *temp;
 
-  printf("memset\n");
   memset(&hints, 0, sizeof(struct addrinfo));
-  printf("memset\n");
   hints.ai_family = AF_INET;
   if(err = getaddrinfo(lookup, NULL, &hints, &infoptr)) {
     fprintf(stderr,"gai_strerror: %s\n",gai_strerror(err));
     perror("Error in getaddrinfo");
     return EXIT_FAILURE;
   }
+
   printf("getaddrinfo success.\n");
-  printf("infoptr: %p\n",infoptr);
   for(temp = infoptr; temp != NULL; temp = temp->ai_next) {
     getnameinfo(temp->ai_addr, temp->ai_addrlen, buf, buflen, NULL, 0, NI_NUMERICHOST);
     printf("getaddrinfo-getnameinfo: %s\n",buf);
@@ -113,28 +114,31 @@ void* client_sender(void *sock){
   sr_wrapper(msg,CLIENT,SEND,s);
 
   printf("Client %i done!\n",s);
-  pthread_exit(EXIT_SUCCESS);
+  pthread_exit((void*)EXIT_SUCCESS);
 }
 
 void* client_maker(){
+  int id = pthread_self();
   printf("client_maker started.\n");
+  
  
   int sock;
   struct sockaddr_in serv_addr;
   //make a client n times
   pthread_t c[NUM_CLIENTS];
+  int ret[NUM_CLIENTS];
    
   for(int i = 0; i < NUM_CLIENTS; i++){
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) { 
       perror("Client: Socket creation error \n"); 
-      pthread_exit(EXIT_FAILURE);
+      pthread_exit((void*)EXIT_FAILURE);
     }
     //set dst socket info
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(PORT); 
     if(inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr)<=0) { 
       printf("Client: Invalid address/ Address not supported\n"); 
-      pthread_exit(EXIT_FAILURE);
+      pthread_exit((void*)EXIT_FAILURE);
     }
 
     while(connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) { 
@@ -147,10 +151,16 @@ void* client_maker(){
   }
   for(int i = 0; i < NUM_CLIENTS; i++){
     printf("waiting for clients to exit...\n"); //without this replit crashes??
-    pthread_join(c[i]);
+    pthread_join(c[i],(void**)&ret[i]); //crashing here !!
+  }
+  for(int i = 0; i < NUM_CLIENTS; i++){
+    if(ret[i] != EXIT_SUCCESS) {
+      printf("One or more clients have failed :(\n");
+      pthread_exit((void*)EXIT_FAILURE);
+    }
   }
   printf("All clients have successfully exited!\n");
-  pthread_exit(EXIT_SUCCESS);
+  pthread_exit((void*)EXIT_SUCCESS);
 }
 
 void *server_sender(void *sock){
@@ -164,7 +174,7 @@ void *server_sender(void *sock){
   get_info(LOOKUP);
   
   printf("Server %i done!\n",s);
-  pthread_exit(EXIT_SUCCESS);
+  pthread_exit((void*)EXIT_SUCCESS);
 }
 
 
@@ -226,13 +236,13 @@ void *server_listener() {
       perror("Server: Error in accept"); 
       exit(EXIT_FAILURE); 
     }
-    pthread_t* s;
+    pthread_t s;
     pthread_create(&s,NULL, server_sender,(void*)&sock);
     printf("Making a server thread to send things.\n");
     pthread_detach(s);
   }
   
-  pthread_exit(EXIT_SUCCESS);
+  pthread_exit((void*)EXIT_SUCCESS);
 }
 
 
@@ -240,7 +250,7 @@ int main(int argc, char const *argv[]) {
   pthread_t s,c;
   pthread_create(&s,NULL, server_listener,NULL);
   pthread_create(&c,NULL, client_maker,NULL);
-  pthread_join(s,NULL);
   pthread_join(c,NULL);
+  pthread_join(s,NULL);
   return EXIT_SUCCESS;
 }
