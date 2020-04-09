@@ -14,17 +14,19 @@
 #define RECV 1
 
 void* client_sender(){
-  printf("Client %i online.\n",s);
-
   char msg[256];
   struct sockaddr_in serv_addr;
   socklen_t addr_len = sizeof(serv_addr);
   int s;
+  int fail = -1;
+  int success = 0;
   
   if ((s = socket(AF_INET, SOCK_DGRAM, 0)) < 0) { 
       perror("Client: Socket creation error \n"); 
       pthread_exit(EXIT_FAILURE);
     }
+
+  printf("Client %i online.\n",s);
 
   //set dst socket info
   serv_addr.sin_family = AF_INET;
@@ -39,11 +41,12 @@ void* client_sender(){
   if(sendto(s, msg, strlen(msg) , 0,(struct sockaddr*)&serv_addr,addr_len)<0) {
     printf("Client %i error in sendto.\n",s);
     perror("*");
-    return EXIT_FAILURE;
+    pthread_exit(EXIT_FAILURE);
   }
 
   printf("Client %i done!\n",s);
-  pthread_exit(EXIT_SUCCESS);
+  //pthread_exit(EXIT_SUCCESS);
+  pthread_exit(NULL);
 }
 
 void* client_maker(){ 
@@ -59,6 +62,7 @@ void* client_maker(){
     pthread_create(&c[i],NULL,client_sender,NULL);
   }
   for(int i = 0; i < NUM_CLIENTS; i++){
+    printf("pthread_join!\n"); // adding this print statement stops it from segfaulting WHY
     pthread_join(c[i]);
   }
 
@@ -81,7 +85,7 @@ void *server_listener() {
   // Creating socket file descriptor
   if ((sd = socket(AF_INET, SOCK_DGRAM, 0)) == 0) { 
     perror("Server: Error in socket"); 
-    exit(EXIT_FAILURE);
+    pthread_exit(EXIT_FAILURE);
   }
   
   addr.sin_family = AF_INET; 
@@ -91,7 +95,7 @@ void *server_listener() {
   //binding socket
   if (bind(sd, (struct sockaddr *) &addr, addrlen)<0) { 
     perror("Server: Error in bind"); 
-    exit(EXIT_FAILURE); 
+    pthread_exit(EXIT_FAILURE); 
   }
 
   //wait for incoming connection
@@ -100,11 +104,11 @@ void *server_listener() {
     memset((void*)buf, 0x00, buf_size);
     if(recvfrom(sd, (void*)buf, buf_size,0,(struct sockaddr*)&from,&addrlen)<0) {
       perror("Error in recvfrom.");
-      return EXIT_FAILURE;
+      pthread_exit(EXIT_FAILURE);
     }
     inet_ntop(AF_INET, &from.sin_addr,from_addr, INET_ADDRSTRLEN);
     short port = ntohs(from.sin_port);
-    printf("Received message from %s:%i: '%s'\n",from_addr,port,buf);
+    printf("Received message ;from %s:%i: '%s'\n",from_addr,port,buf);
   }
   
   pthread_exit(EXIT_SUCCESS);

@@ -1,3 +1,5 @@
+/*stolen from geeksforgeeks.com
+Used for reference only. */
 
 // Server side C/C++ program to demonstrate Socket programming 
 #include <unistd.h> 
