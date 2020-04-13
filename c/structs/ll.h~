@@ -1,0 +1,7 @@
+#include "node.h"
+
+typedef struct ll {
+  Node* top;
+} ll_t;
+
+ll_create()
