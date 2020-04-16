@@ -1,4 +1,0 @@
-typedef struct node {
-  Node* next;
-  int data;
-}node_t;
