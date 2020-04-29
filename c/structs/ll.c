@@ -5,17 +5,20 @@
 #include "node.h"
 #include "ll.h"
 
+static node_t *makeNode(int data, node_t *next) {
+  node_t *node = malloc(sizeof(struct node));
+  node->data = data;
+  node->next = next;
+  return node;
+}
+
 ll_t* ll_create(int *data, int size) {
-  ll_t *list = malloc(sizeof(ll_t));
+  ll_t *list = malloc(sizeof(struct ll));
   list->size = size;
   //makes the list starting from the last node and going backwards
-  node_t *next = malloc(sizeof(node_t));
-  next->data = data[size-1];
-  next->next = NULL;
+  node_t *next = makeNode(data[size-1],NULL);
   for(int i=size-2; i>=0;i--) {
-    node_t* curr = malloc(sizeof(node_t));
-    curr->data = data[i];
-    curr->next = next;
+    node_t* curr = makeNode(data[i],next);
     next = curr;
   }
   list->top = next;
@@ -102,7 +105,7 @@ void ll_sort(ll_t *ll,int algo) {
 }
 
 int *ll_toarray(ll_t *ll) {
-  int *ret = (int*)malloc(ll->size);
+  int *ret = (int*)malloc(ll->size*sizeof(int));
   node_t *curr = ll->top;
   for(int i = 0; i<ll->size; i++) {
     ret[i] = curr->data;
@@ -111,6 +114,19 @@ int *ll_toarray(ll_t *ll) {
   return ret;
 }
 
+void ll_insert(ll_t *ll, int item, int i) {
+
+  node_t *curr = ll->top;
+  node_t *prev = NULL;
+  while(curr!=NULL && i>=0) {
+    prev = curr; 
+    curr = curr->next;
+    i--;
+  }
+  prev->next = makeNode(item,curr);
+  ll->size++;
+  return;
+}
   
 int main() {
   printf("Making linked list of 0-9...\n");
@@ -128,6 +144,11 @@ int main() {
 
   printf("Sorting list...\n");
   ll_sort(list,LL_MERGESORT);
+  ll_print(list);
+
+  int item = 2015;
+  printf("ll_insert test. Inserting %i into index %i\n", item, i);
+  ll_insert(list,item,i);
   ll_print(list);
 
   

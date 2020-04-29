@@ -21,7 +21,7 @@ int *ll_toarray(ll_t *ll);
 
 void ll_del(ll_t *ll, int i);
 
-void ll_insert(ll_t *ll, int i);
+void ll_insert(ll_t *ll, int item, int i);
 
 void ll_delall(ll_t *ll);
 

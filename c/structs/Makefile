@@ -1,6 +1,7 @@
 CC=gcc
 INCLUDE=.
 CFLAGS= -Wall
+BINS = ll stack
 
 stack: stack.o
 	$(CC) $(CFLAGS) -o $@ $<
@@ -12,3 +13,5 @@ ll: ll.o
 
 ll.o: ll.c ll.h node.h
 	$(CC) $(CFLAGS) -c $<
+clean:
+	rm *.o $(BINS)
