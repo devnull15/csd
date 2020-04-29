@@ -114,17 +114,70 @@ int *ll_toarray(ll_t *ll) {
   return ret;
 }
 
-void ll_insert(ll_t *ll, int item, int i) {
-
+void ll_del(ll_t *ll, int i) {
   node_t *curr = ll->top;
   node_t *prev = NULL;
+
+  //delete top node
+  if(i==0) { ll->top = curr->next; }
+  else {
+    //all other cases
+    while(curr!=NULL && i>0) {
+      prev = curr;
+      curr = curr->next;
+      i--;
+    }
+    if(curr==NULL){ fprintf(stderr,"ll_del: index %i is out of bounds\n", i); return; }
+    else { prev->next = curr->next; }
+  }
+  
+  free(curr);
+  ll->size--;
+
+  return;
+}
+
+void ll_insert(ll_t *ll, int item, int i) {
+  node_t *curr = ll->top;
+  node_t *prev = NULL;
+
+  //insert top node
+  if(i==0) { ll->top = curr->next; }
+  else {
+    //all other cases
+    while(curr!=NULL && i>0) {
+      prev = curr;
+      curr = curr->next;
+      i--;
+    }
+    if(curr==NULL){ fprintf(stderr,"ll_del: index %i is out of bounds\n", i); return; }
+    else { prev->next = curr->next; }
+  }
+  
+  free(curr);
+  ll->size--;
+
+  return;
+
+  //insert top node
+  
   while(curr!=NULL && i>=0) {
     prev = curr; 
     curr = curr->next;
     i--;
   }
-  prev->next = makeNode(item,curr);
-  ll->size++;
+  if(curr==NULL){ fprintf(stderr,"ll_insert: index %i is out of bounds\n", i); }
+  else {
+    prev->next = makeNode(item,curr);
+    ll->size++;
+  }
+  return;
+}
+
+void ll_delall(ll_t *ll) {
+  for(int i=0; i<ll->size; i++) {
+    
+  }
   return;
 }
   
@@ -151,6 +204,10 @@ int main() {
   ll_insert(list,item,i);
   ll_print(list);
 
+  i=0;
+  printf("ll_del test. Deleting index %i\n", i);  
+  ll_del(list,i);
+  ll_print(list);
   
   return EXIT_SUCCESS;
 }
