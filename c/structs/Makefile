@@ -13,5 +13,12 @@ ll: ll.o
 
 ll.o: ll.c ll.h node.h
 	$(CC) $(CFLAGS) -c $<
+
+dll: dll.o
+	$(CC) $(CFLAGS) -o $@ $<
+
+dll.o: dll.c dll.h node.h
+	$(CC) $(CFLAGS) -c $<
+
 clean:
 	rm *.o $(BINS)
