@@ -142,24 +142,6 @@ void ll_insert(ll_t *ll, int item, int i) {
   node_t *prev = NULL;
 
   //insert top node
-  if(i==0) { ll->top = curr->next; }
-  else {
-    //all other cases
-    while(curr!=NULL && i>0) {
-      prev = curr;
-      curr = curr->next;
-      i--;
-    }
-    if(curr==NULL){ fprintf(stderr,"ll_del: index %i is out of bounds\n", i); return; }
-    else { prev->next = curr->next; }
-  }
-  
-  free(curr);
-  ll->size--;
-
-  return;
-
-  //insert top node
   
   while(curr!=NULL && i>=0) {
     prev = curr; 
@@ -175,12 +157,18 @@ void ll_insert(ll_t *ll, int item, int i) {
 }
 
 void ll_delall(ll_t *ll) {
-  for(int i=0; i<ll->size; i++) {
-    
+  while(ll->size != 0) {
+    ll_del(ll,0);
   }
   return;
 }
-  
+
+void ll_destroy(ll_t *ll) {
+  ll_delall(ll);
+  free(ll);
+  return;
+}
+
 int main() {
   printf("Making linked list of 0-9...\n");
   int arr[] = {0,1,2,3,4,5,6,7,8,9,-1};
@@ -208,6 +196,21 @@ int main() {
   printf("ll_del test. Deleting index %i\n", i);  
   ll_del(list,i);
   ll_print(list);
+
+  i=5;
+  printf("ll_del test. Deleting index %i\n", i);
+  ll_del(list,i);
+  ll_print(list);
+
+  printf("ll_delall test.\n");
+  ll_delall(list);
+  printf("Printing list, nothing should print:\n");
+  ll_print(list);
+
+  printf("ll_destroy test.\n");
+  ll_destroy(list);
+  printf("It works?\n");
+  
   
   return EXIT_SUCCESS;
 }
