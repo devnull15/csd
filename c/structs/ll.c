@@ -17,8 +17,9 @@ ll_t* ll_create(int *data, int size) {
   list->size = size;
   //makes the list starting from the last node and going backwards
   node_t *next = makeNode(data[size-1],NULL);
+  node_t* curr;
   for(int i=size-2; i>=0;i--) {
-    node_t* curr = makeNode(data[i],next);
+    curr = makeNode(data[i],next);
     next = curr;
   }
   list->top = next;
@@ -141,16 +142,16 @@ void ll_insert(ll_t *ll, int item, int i) {
   node_t *curr = ll->top;
   node_t *prev = NULL;
 
-  //insert top node
-  
-  while(curr!=NULL && i>=0) {
+  while(curr!=NULL && i>0) {
     prev = curr; 
     curr = curr->next;
     i--;
   }
+  
   if(curr==NULL){ fprintf(stderr,"ll_insert: index %i is out of bounds\n", i); }
   else {
-    prev->next = makeNode(item,curr);
+    if(prev==NULL){ ll->top = makeNode(item,curr); } //replace the first node
+    else { prev->next = makeNode(item,curr); } // replace anything else
     ll->size++;
   }
   return;
@@ -171,7 +172,7 @@ void ll_destroy(ll_t *ll) {
 
 int main() {
   printf("Making linked list of 0-9...\n");
-  int arr[] = {0,1,2,3,4,5,6,7,8,9,-1};
+  int arr[] = {0,1,2,3,4,5,6,7,8,9,-1,-63,-2};
   int size = sizeof(arr)/sizeof(int);
   ll_t *list = ll_create(arr,size);
   ll_print(list);
@@ -188,6 +189,7 @@ int main() {
   ll_print(list);
 
   int item = 2015;
+  i=0;
   printf("ll_insert test. Inserting %i into index %i\n", item, i);
   ll_insert(list,item,i);
   ll_print(list);

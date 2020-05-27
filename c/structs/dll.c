@@ -3,39 +3,58 @@
 #include <stdlib.h>
 
 #include "node.h"
-#include "ll.h"
+#include "dll.h"
 
-static node_t *makeNode(int data, node_t *next) {
+static node_t *makeNode(int data, node_t *next, node_t *prev) {
   node_t *node = malloc(sizeof(struct node));
   node->data = data;
   node->next = next;
+  node->prev = prev;
   return node;
 }
 
-ll_t* ll_create(int *data, int size) {
-  ll_t *list = malloc(sizeof(struct ll));
+dll_t* dll_create(int *data, int size) {
+  dll_t *list = malloc(sizeof(struct dll));
   list->size = size;
-  //makes the list starting from the last node and going backwards
-  node_t *next = makeNode(data[size-1],NULL);
-  for(int i=size-2; i>=0;i--) {
-    node_t* curr = makeNode(data[i],next);
-    next = curr;
+  
+  node_t *cur = makeNode(data[0],NULL,NULL);
+  list->top = cur;
+  
+  node_t *next;
+  
+  for(int i=1; i<size;i++) {
+    next = makeNode(data[i],NULL,cur);
+    cur->next = next;
+    cur = next;
   }
-  list->top = next;
+  
+  next->next = NULL;
+  list->bot = next;
+
   return list;
 }
 
-void ll_print(ll_t *ll) {
-  node_t *curr = ll->top;
-  for(int i=0;i<ll->size;i++) {
+void dll_print(dll_t *dll) {
+  node_t *curr = dll->top;
+  for(int i=0;i<dll->size;i++) {
     printf("Node %i value: %i\n", i, curr->data);
     curr = curr->next;
   }
   return;
 }
 
-int ll_get(ll_t *ll, int i) {
-  node_t *curr = ll->top;
+void dll_printrev(dll_t *dll) {
+  node_t *curr = dll->bot;
+  for(int i=0;i<dll->size;i++) {
+    printf("Node %i value: %i\n", dll->size-i-1, curr->data);
+    curr = curr->prev;
+  }
+  return;
+}
+
+// Could make this O(n/2)
+int dll_get(dll_t *dll, int i) {
+  node_t *curr = dll->top;
   while(curr != NULL) {
     if(i==0) { return curr->data; }
     --i;
@@ -52,6 +71,7 @@ static void split(node_t *top, node_t **l, node_t **r, int size) {
     temp = temp->next;
   }
   *r = temp->next;
+  temp->next->prev = NULL;
   temp->next = NULL;
   return;
 }
@@ -69,13 +89,16 @@ node_t *merge(node_t *l, node_t *r) {
   else {
     ret = r;
     ret->next = merge(l,r->next);
-  }
+    }
+
+  ret->next->prev = ret;
+  
   return ret;
 }
 
 static node_t *mergeSortHelper(node_t *top, int size) {
   node_t *l,*r;
-  
+
   //base case node==NULL or next node==NULL; just return
   if(top==NULL || top->next==NULL) { return top; }
   
@@ -84,7 +107,7 @@ static node_t *mergeSortHelper(node_t *top, int size) {
 
   //recurse using this funciton to keep splitting
   l = mergeSortHelper(l,(size+1)/2);
-  r = mergeSortHelper(r,(size+1)/2);
+  r = mergeSortHelper(r,size/2);
   
   //merge the lists
   l = merge(l,r);
@@ -92,80 +115,97 @@ static node_t *mergeSortHelper(node_t *top, int size) {
   return l;
 }
 
-static void mergeSort(ll_t *ll) {
-  ll->top = mergeSortHelper(ll->top,ll->size);
+static void mergeSort(dll_t *dll) {
+  dll->top = mergeSortHelper(dll->top,dll->size);
+  node_t *cur = dll->top;
+  while(cur->next!=NULL) { cur = cur->next; }
+  dll->bot = cur;
   return;
 }
 
-void ll_sort(ll_t *ll,int algo) {
+void dll_sort(dll_t *dll,int algo) {
   //this is a list of the sorting algorithms available
-  void (*sort[])(ll_t*) = {mergeSort};
-  (*sort[algo])(ll);
+  void (*sort[])(dll_t*) = {mergeSort};
+  (*sort[algo])(dll);
   return;
 }
 
-int *ll_toarray(ll_t *ll) {
-  int *ret = (int*)malloc(ll->size*sizeof(int));
-  node_t *curr = ll->top;
-  for(int i = 0; i<ll->size; i++) {
+int *dll_toarray(dll_t *dll) {
+  int *ret = (int*)malloc(dll->size*sizeof(int));
+  node_t *curr = dll->top;
+
+  for(int i = 0; i<dll->size; i++) {
     ret[i] = curr->data;
     curr = curr->next;
   }
   return ret;
 }
 
-void ll_del(ll_t *ll, int i) {
-  node_t *curr = ll->top;
+void dll_del(dll_t *dll, int i) {
+  node_t *cur = dll->top;
   node_t *prev = NULL;
 
   //delete top node
-  if(i==0) { ll->top = curr->next; }
+  if(i==0) {
+    dll->top = cur->next;
+    cur->prev = NULL;
+  }
   else {
     //all other cases
-    while(curr!=NULL && i>0) {
-      prev = curr;
-      curr = curr->next;
+    while(cur!=NULL && i>0) {
+      prev = cur;
+      cur = cur->next;
       i--;
     }
-    if(curr==NULL){ fprintf(stderr,"ll_del: index %i is out of bounds\n", i); return; }
-    else { prev->next = curr->next; }
+    if(cur==NULL){ fprintf(stderr,"dll_del: index %i is out of bounds\n", i); return; }
+    else {
+      prev->next = cur->next;
+      cur->next->prev = prev;
+    }
   }
   
-  free(curr);
-  ll->size--;
+  free(cur);
+  dll->size--;
 
   return;
 }
 
-void ll_insert(ll_t *ll, int item, int i) {
-  node_t *curr = ll->top;
+void dll_insert(dll_t *dll, int item, int i) {
+  node_t *cur = dll->top;
   node_t *prev = NULL;
 
-  //insert top node
-  
-  while(curr!=NULL && i>=0) {
-    prev = curr; 
-    curr = curr->next;
+  while(cur!=NULL && i>0) {
+    prev = cur; 
+    cur = cur->next;
     i--;
   }
-  if(curr==NULL){ fprintf(stderr,"ll_insert: index %i is out of bounds\n", i); }
+  
+  if(cur==NULL){ fprintf(stderr,"dll_insert: index %i is out of bounds\n", i); }
   else {
-    prev->next = makeNode(item,curr);
-    ll->size++;
+    if(prev==NULL){  //replace the first node
+      dll->top = makeNode(item,cur,NULL);
+      cur->prev = dll->top;
+    }
+    else {  // replace anything else
+      prev->next = makeNode(item,cur,prev);
+      cur->prev = prev->next;
+    }
+    dll->size++;
   }
   return;
 }
 
-void ll_delall(ll_t *ll) {
-  while(ll->size != 0) {
-    ll_del(ll,0);
+
+void dll_delall(dll_t *dll) {
+  while(dll->size != 0) {
+    dll_del(dll,0);
   }
   return;
 }
 
-void ll_destroy(ll_t *ll) {
-  ll_delall(ll);
-  free(ll);
+void dll_destroy(dll_t *dll) {
+  dll_delall(dll);
+  free(dll);
   return;
 }
 
@@ -173,42 +213,49 @@ int main() {
   printf("Making linked list of 0-9...\n");
   int arr[] = {0,1,2,3,4,5,6,7,8,9,-1};
   int size = sizeof(arr)/sizeof(int);
-  ll_t *list = ll_create(arr,size);
-  ll_print(list);
+  dll_t *list = dll_create(arr,size);
+  dll_printrev(list);
 
   int i=5;
-  printf("ll_get test. Getting item %i value should be %i\n", i, arr[i]);
-  printf("ll_get: ll[%i] = %i\n", i, ll_get(list,i));
+  printf("dll_get test. Getting item %i value should be %i\n", i, arr[i]);
+  printf("dll_get: dll[%i] = %i\n", i, dll_get(list,i));
 
-  printf("ll_toarray test. Getting item %i value should be %i\n", i, arr[i]);
-  printf("ll_toarray: ret[%i]=%i\n",i,ll_toarray(list)[i]);
+  printf("dll_toarray test. Getting item %i value should be %i\n", i, arr[i]);
+  printf("dll_toarray: ret[%i]=%i\n",i,dll_toarray(list)[i]);
 
   printf("Sorting list...\n");
-  ll_sort(list,LL_MERGESORT);
-  ll_print(list);
+  dll_sort(list,DLL_MERGESORT);
+  dll_printrev(list);
 
   int item = 2015;
-  printf("ll_insert test. Inserting %i into index %i\n", item, i);
-  ll_insert(list,item,i);
-  ll_print(list);
-
   i=0;
-  printf("ll_del test. Deleting index %i\n", i);  
-  ll_del(list,i);
-  ll_print(list);
+  printf("dll_insert test. Inserting %i into index %i\n", item, i);
+  dll_insert(list,item,i);
+  dll_printrev(list);
+
+  item = -42;
+  i=6;
+  printf("dll_insert test. Inserting %i into index %i\n", item, i);
+  dll_insert(list,item,i);
+  dll_printrev(list);
+  
+  i=0;
+  printf("dll_del test. Deleting index %i\n", i);  
+  dll_del(list,i);
+  dll_printrev(list);
 
   i=5;
-  printf("ll_del test. Deleting index %i\n", i);
-  ll_del(list,i);
-  ll_print(list);
+  printf("dll_del test. Deleting index %i\n", i);
+  dll_del(list,i);
+  dll_printrev(list);
 
-  printf("ll_delall test.\n");
-  ll_delall(list);
+  printf("dll_delall test.\n");
+  dll_delall(list);
   printf("Printing list, nothing should print:\n");
-  ll_print(list);
+  dll_printrev(list);
 
-  printf("ll_destroy test.\n");
-  ll_destroy(list);
+  printf("dll_destroy test.\n");
+  dll_destroy(list);
   printf("It works?\n");
   
   
