@@ -43,6 +43,15 @@ void cll_print(cll_t *cll) {
   return;
 }
 
+static void cll_print4ever(cll_t *cll) {
+  node_t *curr = cll->top;
+  while(curr!=NULL) {
+    printf("Node value: %i\n", curr->data);
+    curr = curr->next;
+  }
+  return;  
+}
+
 
 // Could make this O(n/2)
 int cll_get(cll_t *cll, int i) {
@@ -108,9 +117,20 @@ static node_t *mergeSortHelper(node_t *top, int size) {
 }
 
 static void mergeSort(cll_t *cll) {
-  cll->top = mergeSortHelper(cll->top,cll->size);
   node_t *cur = cll->top;
+
+  //have to un-circularize the list before sorting
+  for(int i=1; i<cll->size; i++) {
+    cur = cur->next;
+  }
+  cur->next = NULL;
+
+  //sort
+  cll->top = mergeSortHelper(cll->top,cll->size);
+
+  //re-circularize list
   while(cur->next!=NULL) { cur = cur->next; }
+  cur->next = cll->top;
   return;
 }
 
@@ -215,45 +235,47 @@ int main() {
   printf("cll_get test - out of bounds. Getting item %i value should be %i\n", i, EXIT_FAILURE);
   printf("cll_get: cll[%i] = %i\n", i, cll_get(list,i));
 
+  i=5;
+  printf("cll_toarray test. Getting item %i value should be %i\n", i, arr[i]);
+  printf("cll_toarray: ret[%i]=%i\n",i,cll_toarray(list)[i]);
+
+  printf("Sorting list...\n");
+  cll_sort(list,CLL_MERGESORT);
+  cll_print(list);
+
+  int item = 2015;
+  i=0;
+  printf("cll_insert test. Inserting %i into index %i\n", item, i);
+  cll_insert(list,item,i);
+  cll_print(list);
+
+  item = 2015;
+  i=15;
+  printf("cll_insert test circular style. Inserting %i into index %i\n", item, i);
+  cll_insert(list,item,i);
+  cll_print(list);
+
   
-  /* printf("cll_toarray test. Getting item %i value should be %i\n", i, arr[i]); */
-  /* printf("cll_toarray: ret[%i]=%i\n",i,cll_toarray(list)[i]); */
+  i=0;
+  printf("cll_del test. Deleting index %i\n", i);
+  cll_del(list,i);
+  cll_print(list);
 
-  /* printf("Sorting list...\n"); */
-  /* cll_sort(list,CLL_MERGESORT); */
-  /* cll_print(list); */
+  i=15;
+  printf("cll_del test circular style. Deleting index %i\n", i);
+  cll_del(list,i);
+  cll_print(list);
 
-  /* int item = 2015; */
-  /* i=0; */
-  /* printf("cll_insert test. Inserting %i into index %i\n", item, i); */
-  /* cll_insert(list,item,i); */
-  /* cll_print(list); */
+  printf("cll_delall test.\n");
+  cll_delall(list);
+  printf("Printing list, nothing should print:\n");
+  cll_print(list);
 
-  /* item = -42; */
-  /* i=6; */
-  /* printf("cll_insert test. Inserting %i into index %i\n", item, i); */
-  /* cll_insert(list,item,i); */
-  /* cll_print(list); */
+  printf("cll_destroy test.\n");
+  cll_destroy(list);
+  printf("It works?\n");
   
-  /* i=0; */
-  /* printf("cll_del test. Deleting index %i\n", i);   */
-  /* cll_del(list,i); */
-  /* cll_print(list); */
-
-  /* i=5; */
-  /* printf("cll_del test. Deleting index %i\n", i); */
-  /* cll_del(list,i); */
-  /* cll_print(list); */
-
-  /* printf("cll_delall test.\n"); */
-  /* cll_delall(list); */
-  /* printf("Printing list, nothing should print:\n"); */
-  /* cll_print(list); */
-
-  /* printf("cll_destroy test.\n"); */
-  /* cll_destroy(list); */
-  /* printf("It works?\n"); */
-  
+  //cll_print4ever(list);
   
   return EXIT_SUCCESS;
 }
