@@ -20,5 +20,12 @@ dll: dll.o
 dll.o: dll.c dll.h node.h
 	$(CC) $(CFLAGS) -c $<
 
+cll: cll.o
+	$(CC) $(CFLAGS) -o $@.out $<
+
+cll.o: cll.c cll.h node.h
+	$(CC) $(CFLAGS) -c $<
+
+
 clean:
 	rm *.o *.out

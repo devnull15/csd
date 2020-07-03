@@ -13,8 +13,6 @@ cll_t* cll_create(int *data, int size);
 
 void cll_print(cll_t *cll);
 
-void cll_preintrev(cll_t *cll);
-
 int cll_get(cll_t *cll, int i);
 
 void cll_sort(cll_t *cll, int algo);
